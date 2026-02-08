@@ -9,3 +9,7 @@ torch
 python-multipart
 google-generativeai
 python-dotenv
+PyPDF2
+faiss-cpu
+langchain
+langchain-community
