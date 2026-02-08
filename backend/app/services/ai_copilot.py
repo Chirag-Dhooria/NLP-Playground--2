@@ -1,16 +1,20 @@
 import google.generativeai as genai
 import pandas as pd
 import os
+from dotenv import load_dotenv
 
-# --- PASTE YOUR KEY HERE ---
-API_KEY = "AIzaSyAlpxIVnvDFMzU9poiXQBKAlZOTQl0e_I8" # (Your key from the file)
-genai.configure(api_key=API_KEY)
+load_dotenv()
 
-# Try 'gemini-1.5-flash' first - it is the most standard model.
-# If '2.5-pro' is not available to your key, it will crash.
-model = genai.GenerativeModel('gemini-2.5-flash')
+API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
 UPLOAD_DIR = "uploads"
+
+def _get_model():
+    if not API_KEY:
+        raise ValueError("GEMINI_API_KEY is not set in the environment.")
+    genai.configure(api_key=API_KEY)
+    return genai.GenerativeModel(MODEL_NAME)
 
 def analyze_metadata(filename: str):
     # Robust path finding
@@ -41,6 +45,7 @@ def analyze_metadata(filename: str):
 
 async def consult_gemini(filename: str, user_query: str):
     try:
+        model = _get_model()
         # 1. Get Metadata
         metadata = analyze_metadata(filename)
         
