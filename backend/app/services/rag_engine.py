@@ -4,8 +4,8 @@ from typing import List, Dict, Any
 import google.generativeai as genai
 from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from PyPDF2 import PdfReader
 
 load_dotenv()
