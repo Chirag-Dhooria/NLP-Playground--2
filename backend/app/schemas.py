@@ -17,3 +17,7 @@ class TrainRequest(BaseModel):
 class ChatRequest(BaseModel):
     filename: str
     user_query: str
+
+class RagQueryRequest(BaseModel):
+    filename: str
+    question: str

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import 'chart.js/auto'; // Required for Chart.js 3+
 import CopilotChat from './CopilotChat';
+import DocumentChat from './DocumentChat';
 
 const API_URL = "http://localhost:8000";
 
@@ -125,9 +126,14 @@ const Dashboard = ({ task, onBack }) => {
            )}
         </div>
 
-        {/* Bottom: AI Copilot (WPR 4 Feature) */}
-        <div className="h-1/3 bg-white rounded-lg shadow border-2 border-indigo-100 overflow-hidden">
-           {file && <CopilotChat filename={file} />}
+        {/* Bottom: AI Copilot + Ask Document */}
+        <div className="h-1/3 flex gap-6">
+          <div className="w-1/2 bg-white rounded-lg shadow border-2 border-indigo-100 overflow-hidden">
+            {file && <CopilotChat filename={file} />}
+          </div>
+          <div className="w-1/2 bg-white rounded-lg shadow border-2 border-emerald-100 overflow-hidden">
+            <DocumentChat />
+          </div>
         </div>
       </div>
     </div>
