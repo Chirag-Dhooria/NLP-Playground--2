@@ -68,6 +68,7 @@ const Dashboard = ({ task, onBack }) => {
     );
   }
 
+<<<<<<< codex/add-separate-tab-for-rag/ask-your-document-0ygoef
   const requiresTarget = task === 'classification';
   const requiresContext = task === 'qa';
   const canRun =
@@ -77,6 +78,8 @@ const Dashboard = ({ task, onBack }) => {
     (!requiresContext || !!config.context_col) &&
     !loading;
 
+=======
+>>>>>>> main
   return (
     <div className="flex gap-6 h-[85vh]">
       <div className="w-1/3 bg-white p-6 rounded-lg shadow overflow-y-auto">
@@ -202,6 +205,10 @@ const Dashboard = ({ task, onBack }) => {
           )}
         </div>
 
+<<<<<<< codex/add-separate-tab-for-rag/ask-your-document-0ygoef
+=======
+        {/* Bottom: AI Copilot */}
+>>>>>>> main
         <div className="h-1/3 flex gap-6">
           <div className="w-1/2 bg-white rounded-lg shadow border-2 border-indigo-100 overflow-hidden">
             {file && <CopilotChat filename={file} />}

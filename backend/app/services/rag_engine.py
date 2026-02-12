@@ -66,12 +66,19 @@ class GeminiEmbeddings:
         """Compatibility shim for vectorstore paths that treat embeddings as callable."""
         return self.embed_query(text)
 
+<<<<<<< codex/add-separate-tab-for-rag/ask-your-document-0ygoef
 
 
 def _resolve_upload_path(filename: str) -> Path:
     return UPLOAD_DIR / filename
 
 
+=======
+def _resolve_upload_path(filename: str) -> Path:
+    return UPLOAD_DIR / filename
+
+
+>>>>>>> main
 def _extract_pdf_pages(file_path: Path) -> List[Dict[str, Any]]:
     reader = PdfReader(str(file_path))
     pages = []
