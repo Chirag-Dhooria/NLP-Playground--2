@@ -22,7 +22,7 @@ const TaskSelector = ({ onSelect }) => {
         <TaskCard title="Summarization" icon={FileText} onClick={() => onSelect('summarization')} />
         <TaskCard title="Question Answering" icon={HelpCircle} onClick={() => onSelect('qa')} />
         <TaskCard title="Sentiment Analysis" icon={MessageSquare} onClick={() => onSelect('sentiment')} />
-        <TaskCard title="RAG / Ask Your Document" icon={Bot} onClick={() => onSelect('rag')} />
+        <TaskCard title="Ask Your Document (RAG)" icon={Bot} onClick={() => onSelect('rag')} />
       </div>
     </div>
   );
