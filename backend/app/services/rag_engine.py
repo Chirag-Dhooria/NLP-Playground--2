@@ -25,26 +25,42 @@ class GeminiEmbeddings:
         if not api_key:
             raise ValueError("GEMINI_API_KEY is not set in the environment.")
         genai.configure(api_key=api_key)
-        self.model = model
+
+        self.primary_model = model
+        self.fallback_models = [
+            "models/embedding-001",
+            "embedding-001",
+        ]
+
+    def _embed(self, text: str, task_type: str) -> List[float]:
+        candidate_models = [self.primary_model, *self.fallback_models]
+        last_error = None
+
+        for candidate in candidate_models:
+            try:
+                response = genai.embed_content(
+                    model=candidate,
+                    content=text,
+                    task_type=task_type,
+                )
+                return response["embedding"]
+            except Exception as exc:
+                last_error = exc
+                error_text = str(exc).lower()
+                if "not found" not in error_text and "not supported" not in error_text:
+                    raise
+
+        raise ValueError(
+            "No supported Gemini embedding model is available. "
+            "Tried configured and fallback models. "
+            f"Last error: {last_error}"
+        )
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = []
-        for text in texts:
-            response = genai.embed_content(
-                model=self.model,
-                content=text,
-                task_type="retrieval_document",
-            )
-            embeddings.append(response["embedding"])
-        return embeddings
+        return [self._embed(text, task_type="retrieval_document") for text in texts]
 
     def embed_query(self, text: str) -> List[float]:
-        response = genai.embed_content(
-            model=self.model,
-            content=text,
-            task_type="retrieval_query",
-        )
-        return response["embedding"]
+        return self._embed(text, task_type="retrieval_query")
 
 
 def _resolve_upload_path(filename: str) -> Path:
