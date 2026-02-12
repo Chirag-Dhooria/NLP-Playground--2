@@ -48,6 +48,18 @@ const Dashboard = ({ task, onBack }) => {
     }
   };
 
+  if (task === 'rag') {
+    return (
+      <div className="h-[85vh] bg-white p-6 rounded-lg shadow flex flex-col">
+        <button onClick={onBack} className="text-sm text-gray-500 mb-4 hover:underline w-fit">← Back to Tasks</button>
+        <h2 className="text-2xl font-bold mb-4">Ask Your Document Workspace</h2>
+        <div className="flex-1 rounded-lg shadow border-2 border-emerald-100 overflow-hidden">
+          <DocumentChat />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-6 h-[85vh]">
       {/* LEFT: Config & Actions */}
@@ -126,13 +138,10 @@ const Dashboard = ({ task, onBack }) => {
            )}
         </div>
 
-        {/* Bottom: AI Copilot + Ask Document */}
+        {/* Bottom: AI Copilot */}
         <div className="h-1/3 flex gap-6">
           <div className="w-1/2 bg-white rounded-lg shadow border-2 border-indigo-100 overflow-hidden">
             {file && <CopilotChat filename={file} />}
-          </div>
-          <div className="w-1/2 bg-white rounded-lg shadow border-2 border-emerald-100 overflow-hidden">
-            <DocumentChat />
           </div>
         </div>
       </div>
