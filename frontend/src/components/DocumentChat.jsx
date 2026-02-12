@@ -3,9 +3,9 @@ import axios from 'axios';
 import { FileText, Send, Bot } from 'lucide-react';
 
 const DocumentChat = () => {
-  const [documentName, setDocumentName] = useState("");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [documentName, setDocumentName] = useState('');
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
   const [sources, setSources] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -13,17 +13,17 @@ const DocumentChat = () => {
     const selectedFile = event.target.files[0];
     if (!selectedFile) return;
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    formData.append('file', selectedFile);
     setLoading(true);
-    setAnswer("");
+    setAnswer('');
     setSources([]);
 
     try {
-      const res = await axios.post("http://localhost:8000/rag/upload", formData);
+      const res = await axios.post('http://localhost:8000/rag/upload', formData);
       setDocumentName(res.data.filename);
       setAnswer(`Indexed ${res.data.chunks_indexed} chunks across ${res.data.pages_indexed} pages.`);
     } catch (error) {
-      setAnswer("Failed to upload and index the document.");
+      setAnswer(error.response?.data?.detail || 'Failed to upload and index the document.');
     } finally {
       setLoading(false);
     }
@@ -32,17 +32,17 @@ const DocumentChat = () => {
   const handleAsk = async () => {
     if (!question || !documentName) return;
     setLoading(true);
-    setAnswer("");
+    setAnswer('');
     setSources([]);
     try {
-      const res = await axios.post("http://localhost:8000/rag/query", {
+      const res = await axios.post('http://localhost:8000/rag/query', {
         filename: documentName,
         question,
       });
       setAnswer(res.data.answer);
       setSources(res.data.sources || []);
     } catch (error) {
-      setAnswer("Failed to query the document.");
+      setAnswer(error.response?.data?.detail || 'Failed to query the document.');
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ const DocumentChat = () => {
 
       <div className="p-3 border-b text-sm text-gray-600 flex items-center gap-2">
         <FileText size={16} />
-        <span>{documentName || "Upload a PDF to begin"}</span>
+        <span>{documentName || 'Upload a PDF to begin'}</span>
       </div>
 
       <div className="p-3 border-b">
@@ -89,7 +89,7 @@ const DocumentChat = () => {
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleAsk()}
+          onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
           placeholder="Ask about the document..."
           className="flex-1 p-2 border rounded focus:outline-none focus:border-emerald-500"
         />
