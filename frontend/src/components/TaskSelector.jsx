@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, FileText, HelpCircle, BarChart2 } from 'lucide-react';
+import { MessageSquare, FileText, HelpCircle, BarChart2, Bot } from 'lucide-react';
 
 const TaskCard = ({ title, icon: Icon, onClick }) => (
   <div 
@@ -22,6 +22,7 @@ const TaskSelector = ({ onSelect }) => {
         <TaskCard title="Summarization" icon={FileText} onClick={() => onSelect('summarization')} />
         <TaskCard title="Question Answering" icon={HelpCircle} onClick={() => onSelect('qa')} />
         <TaskCard title="Sentiment Analysis" icon={MessageSquare} onClick={() => onSelect('sentiment')} />
+        <TaskCard title="Ask Your Document (RAG)" icon={Bot} onClick={() => onSelect('rag')} />
       </div>
     </div>
   );
