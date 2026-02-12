@@ -1,11 +1,12 @@
 import os
+from pathlib import Path
 from typing import List, Dict, Any
 
 import google.generativeai as genai
 from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from PyPDF2 import PdfReader
 
 load_dotenv()
@@ -14,7 +15,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "models/embedding-001")
 GENERATION_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 VECTOR_STORES: Dict[str, FAISS] = {}
 CHUNK_STATS: Dict[str, List[Dict[str, Any]]] = {}
 
@@ -24,37 +25,55 @@ class GeminiEmbeddings:
         if not api_key:
             raise ValueError("GEMINI_API_KEY is not set in the environment.")
         genai.configure(api_key=api_key)
-        self.model = model
+
+        self.primary_model = model
+        self.fallback_models = [
+            "models/embedding-001",
+            "embedding-001",
+        ]
+
+    def _embed(self, text: str, task_type: str) -> List[float]:
+        candidate_models = [self.primary_model, *self.fallback_models]
+        last_error = None
+
+        for candidate in candidate_models:
+            try:
+                response = genai.embed_content(
+                    model=candidate,
+                    content=text,
+                    task_type=task_type,
+                )
+                return response["embedding"]
+            except Exception as exc:
+                last_error = exc
+                error_text = str(exc).lower()
+                if "not found" not in error_text and "not supported" not in error_text:
+                    raise
+
+        raise ValueError(
+            "No supported Gemini embedding model is available. "
+            "Tried configured and fallback models. "
+            f"Last error: {last_error}"
+        )
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        embeddings = []
-        for text in texts:
-            response = genai.embed_content(
-                model=self.model,
-                content=text,
-                task_type="retrieval_document",
-            )
-            embeddings.append(response["embedding"])
-        return embeddings
+        return [self._embed(text, task_type="retrieval_document") for text in texts]
 
     def embed_query(self, text: str) -> List[float]:
-        response = genai.embed_content(
-            model=self.model,
-            content=text,
-            task_type="retrieval_query",
-        )
-        return response["embedding"]
+        return self._embed(text, task_type="retrieval_query")
+
+    def __call__(self, text: str) -> List[float]:
+        """Compatibility shim for vectorstore paths that treat embeddings as callable."""
+        return self.embed_query(text)
 
 
-def _resolve_upload_path(filename: str) -> str:
-    base_dir = os.getcwd()
-    if "app" in base_dir:
-        return os.path.join(base_dir, UPLOAD_DIR, filename)
-    return os.path.join(base_dir, "backend", "app", UPLOAD_DIR, filename)
+
+def _resolve_upload_path(filename: str) -> Path:
+    return UPLOAD_DIR / filename
 
 
-def _extract_pdf_pages(file_path: str) -> List[Dict[str, Any]]:
-    reader = PdfReader(file_path)
+def _extract_pdf_pages(file_path: Path) -> List[Dict[str, Any]]:
+    reader = PdfReader(str(file_path))
     pages = []
     for page_index, page in enumerate(reader.pages, start=1):
         text = page.extract_text() or ""
@@ -69,18 +88,13 @@ def _chunk_pages(pages: List[Dict[str, Any]]) -> List[Document]:
     for page in pages:
         chunks = splitter.split_text(page["text"])
         for chunk_index, chunk in enumerate(chunks, start=1):
-            documents.append(
-                Document(
-                    page_content=chunk,
-                    metadata={"page": page["page"], "chunk": chunk_index},
-                )
-            )
+            documents.append(Document(page_content=chunk, metadata={"page": page["page"], "chunk": chunk_index}))
     return documents
 
 
 def index_document(filename: str) -> Dict[str, Any]:
     file_path = _resolve_upload_path(filename)
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         raise FileNotFoundError(f"Document not found: {filename}")
 
     pages = _extract_pdf_pages(file_path)
@@ -91,10 +105,7 @@ def index_document(filename: str) -> Dict[str, Any]:
     embeddings = GeminiEmbeddings(API_KEY)
     vector_store = FAISS.from_documents(documents, embeddings)
     VECTOR_STORES[filename] = vector_store
-    CHUNK_STATS[filename] = [
-        {"page": doc.metadata["page"], "chunk": doc.metadata["chunk"]}
-        for doc in documents
-    ]
+    CHUNK_STATS[filename] = [{"page": doc.metadata["page"], "chunk": doc.metadata["chunk"]} for doc in documents]
 
     return {
         "filename": filename,
@@ -119,13 +130,7 @@ def query_document(filename: str, question: str, k: int = 4) -> Dict[str, Any]:
         chunk = doc.metadata.get("chunk")
         citation = f"[Page {page}, Chunk {chunk}]"
         context_lines.append(f"{citation} {doc.page_content}")
-        sources.append(
-            {
-                "page": page,
-                "chunk": chunk,
-                "snippet": doc.page_content[:200],
-            }
-        )
+        sources.append({"page": page, "chunk": chunk, "snippet": doc.page_content[:200]})
 
     prompt = f"""
 You are an expert assistant. Use ONLY the context below to answer the question.
